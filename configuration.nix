@@ -12,6 +12,26 @@
       ./hardware-configuration.nix
     ];
 
+#fonts{
+/*	fonts.packages=[
+		pkgs.nerd-fonts.jetbrains-mono
+	];
+	fonts.fontconfig.defaultFonts={
+	monospace=[
+	"JetBrainsMono Nerd Font"
+	];
+	};
+
+*/
+
+#enable android compatibility layer (Waydroid)
+virtualisation.waydroid.enable = true;
+networking.nftables.enable = true;
+  boot.kernelModules = [
+    "binder_linux"
+  ];
+
+
 
 #enable flatpak support 
 services.flatpak.enable = true;
@@ -39,9 +59,9 @@ xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 #lock stuff for freq and cores for battery
 
 boot.kernelParams = [
-    "amd_pstate=active"
-  ];
-
+  "amd_pstate=active"
+  "binder.devices=binder,hwbinder,vndbinder"
+];
   powerManagement.enable = true;
 
   # Use EPP-aware governor
@@ -128,6 +148,7 @@ environment.gnome.excludePackages = with pkgs; [
   gnome-clocks
   snapshot            
   gnome-text-editor   
+  pulseaudio 
   gnome-software     
   seahorse         
 ];
@@ -223,6 +244,7 @@ services.xserver.excludePackages = with pkgs; [
 	onlyoffice-desktopeditors
 	discord
 	pciutils
+	pavucontrol
 	htop
 	librewolf
 	kitty 
