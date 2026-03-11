@@ -33,9 +33,47 @@ networking.nftables.enable = true;
 
 
 
+
+
+
 #enable flatpak support 
 services.flatpak.enable = true;
 xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
+
+
+  # Define the mount point for your NTFS HDD
+  fileSystems."/mnt/HDD" = {
+    device = "/dev/disk/by-uuid/42B40D6CB40D642F";
+    fsType = "ntfs-3g";
+    options = [
+      "uid=1000"
+      "gid=1000"
+      "dmask=022"
+      "fmask=133"
+      "nofail"
+      "noatime"
+      "windows_names"
+    ];
+  };
+
+  # Enable udisks2 for automounting
+  services.udisks2.enable = true;
+
+
+  # Add udev rule for automounting external HDD & turns off gpu
+  services.udev.extraRules =
+    let
+      udisksctl = "${pkgs.udisks}/bin/udisksctl";
+    in ''
+      ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_UUID}=="42B40D6CB40D642F", RUN+="${udisksctl} mount -b /dev/%k"
+      ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{power/control}="auto"
+	ACTION=="remove", SUBSYSTEM=="block", ENV{ID_FS_UUID}=="42B40D6CB40D642F", RUN+="${udisksctl} unmount -b /dev/%k"
+    '';
+
+
+
+
 
 
   # Bootloader.
@@ -119,10 +157,6 @@ hardware.nvidia.prime = {
   };
 
 
-#turn off gpu
-services.udev.extraRules = ''
-    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{power/control}="auto"
-  '';
 
 
 
@@ -236,10 +270,14 @@ services.xserver.excludePackages = with pkgs; [
   #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
 	wget
 	fastfetch
+	aria2
 	powertop
 	git
 	gh
+	ntfs3g
+	udisks2
 	vscodium
+	file-roller
 	python315
 	onlyoffice-desktopeditors
 	discord
@@ -247,7 +285,7 @@ services.xserver.excludePackages = with pkgs; [
 	pavucontrol
 	htop
 	librewolf
-	kitty 
+	alacritty
 	gnome-terminal
 	nautilus
 (pkgs.callPackage (fetchTarball "https://github.com/nabilksabu/vantage-nix/archive/main.tar.gz") {})
